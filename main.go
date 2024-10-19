@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/sankie005/my-admission-controller/pkg/webhook" // Update this to match the module path in your go.mod
+	"github.com/sankie005/my-admission-controller/pkg/webhook"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -19,7 +19,6 @@ func main() {
 	}
 
 	wh := &webhook.AdmissionController{}
-
 	mgr.GetWebhookServer().Register("/validate-jobs", wh)
 
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

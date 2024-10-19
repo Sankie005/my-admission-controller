@@ -2,18 +2,19 @@ package webhook
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	admissionv1 "k8s.io/api/admission/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// Define resource limits
 const (
-	maxMemory = "512Mi"
-	maxCPU    = "500m"
+	maxMemory = "512Mi" // Example memory limit
+	maxCPU    = "500m"  // Example CPU limit
 )
 
 // AdmissionController implements the admission.Handler interface
@@ -38,8 +39,27 @@ func (a *AdmissionController) Handle(ctx context.Context, req admission.Request)
 	}
 
 	fmt.Printf("Handling admission request for: %s\n", req.Name)
-
 	return admission.Allowed("Resource limits are within acceptable range")
+}
+
+// ServeHTTP implements the http.Handler interface
+func (a *AdmissionController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	admissionReview := admissionv1.AdmissionReview{}
+	err := json.NewDecoder(r.Body).Decode(&admissionReview)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response := a.Handle(context.Background(), admission.Request{
+		AdmissionRequest: *admissionReview.Request,
+	})
+
+	admissionReview.Response = &response.AdmissionResponse
+	err = json.NewEncoder(w).Encode(admissionReview)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // InjectDecoder implements the inject.Decoder interface
