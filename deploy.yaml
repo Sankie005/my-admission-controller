@@ -17,4 +17,4 @@ spec:
       - name: admission-controller
         image: sankie005/my-admission-controller:v0.0.1
         ports:
-        - containerPort: 443
+        - containerPort: 80

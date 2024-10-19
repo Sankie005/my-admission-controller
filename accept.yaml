@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: test-cronjob-acceptable
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: test
+            image: busybox
+            command: ["sh", "-c", "echo Hello, Kubernetes! && sleep 3600"]
+            resources:
+              requests:
+                memory: "256Mi"  # Within the limit
+                cpu: "250m"      # Within the limit
+          restartPolicy: OnFailure
