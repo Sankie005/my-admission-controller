@@ -12,7 +12,7 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Port: 80,
+		Port: 8080, // Using port 8080 for non-TLS
 	})
 	if err != nil {
 		os.Exit(1)
