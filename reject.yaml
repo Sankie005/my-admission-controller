@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: test-cronjob-exceed
+  namespace: default
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: test
+            image: busybox
+            command: ["sh", "-c", "echo Hello, Kubernetes! && sleep 3600"]
+            resources:
+              requests:
+                memory: "1Gi"  # Exceeds the limit
+                cpu: "1"       # Exceeds the limit
+          restartPolicy: OnFailure
