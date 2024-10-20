@@ -14,7 +14,7 @@ webhooks:
       name: admission-controller-service
       namespace: default
       path: "/validate-jobs"
-      port: 8080
+      port: 443
     caBundle: ""  # Remove CA bundle since we're not using TLS
   sideEffects: None
   admissionReviewVersions: ["v1", "v1beta1"]
