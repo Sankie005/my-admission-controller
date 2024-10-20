@@ -17,7 +17,7 @@ spec:
       - name: admission-controller
         image: my-admission-controller:v0.0.1
         ports:
-        - containerPort: 443
+        - containerPort: 8080
         volumeMounts:
         - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: webhook-cert
