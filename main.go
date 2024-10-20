@@ -21,8 +21,8 @@ func main() {
 	http.HandleFunc("/validate-jobs", wh.ServeHTTP)
 
 	// Start the webhook server
-	fmt.Println("Starting webhook server on :443")
-	if err := http.ListenAndServe(":443", nil); err != nil {
+	fmt.Println("Starting webhook server on :8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("Error starting webhook server: %v", err)
 		os.Exit(1)
 	}
