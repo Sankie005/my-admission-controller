@@ -15,6 +15,14 @@ spec:
     spec:
       containers:
       - name: admission-controller
-        image: sankie005/my-admission-controller:v0.0.1
+        image: my-admission-controller:v0.0.1
         ports:
-        - containerPort: 80
+        - containerPort: 443
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: webhook-cert
+          readOnly: true
+      volumes:
+      - name: webhook-cert
+        secret:
+          secretName: webhook-server-tls

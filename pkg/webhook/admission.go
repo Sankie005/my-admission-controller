@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	admissionv1 "k8s.io/api/admission/v1"
@@ -44,10 +45,23 @@ func (a *AdmissionController) Handle(ctx context.Context, req admission.Request)
 
 // ServeHTTP implements the http.Handler interface
 func (a *AdmissionController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var body []byte
+	if r.Body != nil {
+		if data, err := io.ReadAll(r.Body); err == nil {
+			body = data
+		}
+	}
+
+	// Verify the content type is accurate
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "application/json" {
+		http.Error(w, "invalid Content-Type, expect `application/json`", http.StatusUnsupportedMediaType)
+		return
+	}
+
 	admissionReview := admissionv1.AdmissionReview{}
-	err := json.NewDecoder(r.Body).Decode(&admissionReview)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := json.Unmarshal(body, &admissionReview); err != nil {
+		http.Error(w, fmt.Sprintf("could not decode body: %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -56,14 +70,27 @@ func (a *AdmissionController) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	})
 
 	admissionReview.Response = &response.AdmissionResponse
-	err = json.NewEncoder(w).Encode(admissionReview)
+	responseBody, err := json.Marshal(admissionReview)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("could not encode response: %v", err), http.StatusInternalServerError)
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(responseBody)
 }
 
 // InjectDecoder implements the inject.Decoder interface
 func (a *AdmissionController) InjectDecoder(d *admission.Decoder) error {
 	a.decoder = d
 	return nil
+}
+
+// StartWebhookServer starts the webhook server without TLS
+func StartWebhookServer(addr string) error {
+	ac := &AdmissionController{}
+	http.HandleFunc("/validate", ac.ServeHTTP)
+	fmt.Printf("Starting webhook server on %s\n", addr)
+	return http.ListenAndServe(addr, nil)
 }

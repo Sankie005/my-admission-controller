@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"net/http"
 	"os"
 
 	"github.com/sankie005/my-admission-controller/pkg/webhook"
@@ -11,17 +14,16 @@ import (
 func main() {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Port: 8080, // Using port 8080 for non-TLS
-	})
-	if err != nil {
-		os.Exit(1)
-	}
-
+	// Create a new AdmissionController
 	wh := &webhook.AdmissionController{}
-	mgr.GetWebhookServer().Register("/validate-jobs", wh)
 
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	// Set up the HTTP server
+	http.HandleFunc("/validate-jobs", wh.ServeHTTP)
+
+	// Start the webhook server
+	fmt.Println("Starting webhook server on :443")
+	if err := http.ListenAndServe(":443", nil); err != nil {
+		log.Fatalf("Error starting webhook server: %v", err)
 		os.Exit(1)
 	}
 }
